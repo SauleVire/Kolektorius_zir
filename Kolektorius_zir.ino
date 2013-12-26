@@ -51,7 +51,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 boolean bBlink = true;
-boolean Freezing_on = false;
+
 
 //#define VERSIJA 10 //reikia ištrinti du pirmus eilutės simbolius, jei plokštelė gaminta Lietuvoje, (vario-geltona spalva)
 //#define VERSIJA 11 //reikia ištrinti du pirmus eilutės simbolius, jei ant Jūsų polokštelės yra  www.SauleVire.lt reklama ir užrašas "Order #100010284"
@@ -153,12 +153,13 @@ void setup() {
 
   lcd.begin(16, 2);
   // Reklaminio užrašo išvedimas į ekraną (TAI LABAI SVARBU :-).
-          lcd.print("www.SauleVire.lt"); 
+          lcd.print("www.SauleVire.lt");
+          lcd.setCursor(0,1);lcd.print("      v2.0      ");
           Serial.println();
           Serial.println("www.SauleVire.lt");
 		Serial.print("Siurblys isijungs, kai temperaturu skirtumas bus - ");  Serial.println(Differential_ON);
 		Serial.print("Siurblys issijungs, kai temperaturu skirtumas bus - ");  Serial.println(Differential_OFF);
-		if (freezing = 1) {Serial.println("Ijungta kolektoriaus apsauga nuo uzsalimo");}
+		if (freezing == 1) {Serial.println("IJUNGTA kolektoriaus apsauga nuo uzsalimo");}
 		else {Serial.println("Kolektoriaus apsauga nuo uzsalimo NEIJUNGTA");}
           delay(5000); //Reklama trunka tik 5 sekundes.
           lcd.clear();
@@ -187,13 +188,14 @@ bBlink = ((bBlink) ? false : true);
  Serial.print("Siurblys isijungs, kai temperaturu skirtumas bus - ");  Serial.println(Differential_ON);
  Serial.print("Siurblys issijungs, kai temperaturu skirtumas bus - ");  Serial.println(Differential_OFF);
  
- 	if (freezing == 1) {lcd.setCursor(14,0);
- 	lcd.print("*");}
- //	lcd.write((uint8_t)3);}
-		else {Serial.println("Kolektoriaus apsauga nuo uzsalimo N_E_I_J_U_N_G_T_A");
-		lcd.setCursor(14,0);
-		lcd.print(" ");
-		}
+if (freezing == 1) {lcd.setCursor(14,0);
+        Serial.println("Kolektoriaus apsauga nuo uzsalimo I_J_U_N_G_T_A");
+ 	lcd.print("*");
+ }else {
+        Serial.println("Kolektoriaus apsauga nuo uzsalimo N_E_I_J_U_N_G_T_A");
+	lcd.setCursor(14,0);
+	lcd.print(" ");}
+
 		 // trečiojo daviklio naudojimas  P_R_A_D_Ž_I_A
  if (Temp3_daviklis == 1){
  val = (analogRead(analogPin) * 100.0) / 1024; //nuskaitoma kintamu rezistoriumi nustatyta termostato reikšmė ir
@@ -221,7 +223,7 @@ else
   else lcd.print("------"); 
   Serial.println(" K L A I D A !"); Temp_3_Error=1;
   }
-  else {lcd.setCursor(11,1);lcd.print(Sensor3_tempC);}
+  else {lcd.setCursor(10,1);lcd.print(" ");lcd.print(Sensor3_tempC);}
   Serial.println(Sensor3_tempC);
   if (millis() > timer_Relay2 + REQUEST_Relay2_Control) {
   timer_Relay2 = millis();
@@ -232,16 +234,13 @@ else
 }} // trečiojo daviklio naudojimas  P_A_B_A_I_G_A
 
  
-//Serial.print((!CollectorSensor.getAddress(Collector_Sensor_Address, 0)));
 if (!CollectorSensor.getAddress(Collector_Sensor_Address, 0)) {
    lcd.setCursor(0,0);
   if (bBlink) lcd.print("KLAIDA!");
   else lcd.print("-------");
    Serial.println("Kolektoriaus Temperatura: K_L_A_I_D_A");
    Collector_Error=1;
-}
-else
-{
+}else{
   CollectorSensor.requestTemperatures(); // Komanda jutikliui parodyti išmatuotą temperatūrą
 Serial.print("Kolektoriaus Temperatura: ");
 Collector_tempC=CollectorSensor.getTempC(Collector_Sensor_Address);
@@ -251,19 +250,18 @@ if (Collector_tempC==-127.00){
   else lcd.print("-------");
   Serial.println(" K L A I D A !");
   Collector_Error=1;
-  }
-else
-{
+  }else{
 Serial.println(Collector_tempC);
   lcd.setCursor(0,0);
   lcd.print("K");
   if (Collector_tempC >= 0) lcd.print(" "); 
   else lcd.setCursor(1,0);
   lcd.print(Collector_tempC);
-  lcd.setCursor(9,0);
+  lcd.setCursor(8,0);
   if (Collector_tempC-Boiler_tempC >=0) lcd.print(" ");
   lcd.print(Collector_tempC-Boiler_tempC);
-  Collector_Good=0;
+  if (Collector_tempC-Boiler_tempC <=10) lcd.print(" ");
+  Collector_Good=1;
   }}
 
   if (!BoilerSensor.getAddress(Boiler_Sensor_Address, 0)) {
@@ -291,7 +289,7 @@ Serial.println(Boiler_tempC);
   lcd.setCursor(1,1);
   lcd.print(Boiler_tempC);
   lcd.print(" ");
-  Boiler_Good=0;
+  Boiler_Good=1;
 }}
 // Tikrinama ar reikia apsaugos nuo užšalimo PRADŽIA
 if (millis() > timer_freezing + REQUEST_freezing) {
@@ -300,11 +298,11 @@ if (freezing == 1) { //jei apsauga įjungta,
 	//tikrinama ar kolektoriaus temperatūra teigiama
 if (Collector_tempC  <= 0 ) { //jei temperatūra neigiama, 
    Siurblys_ijungtas();       //įjungiamas siurblys
-   Freezing_on = true; // pasižymime siurblio būseną , kai įjungime apsaugai nuo užšalimo
    Serial.println("I_J_U_N_G_T_A_S siurblys apsaugai nuo uzsalimo");
-   }  else { if (Freezing_on = true) { Siurblys_isjungtas(); Freezing_on = false;}} //išjungiame siurblį, jei kolektoriaus temperatūra didesnė už 0
+   } 
       }
-} // Tikrinama ar reikia apsaugos nuo užšalimo PABAIGA
+} 
+// Tikrinimo ar reikia apsaugos nuo užšalimo PABAIGA
 
 //__________________________________________________
 //Tikrinama kokia turį būti siurblio būsena. Pradžia
@@ -312,8 +310,8 @@ if (Collector_tempC  <= 0 ) { //jei temperatūra neigiama,
 //kintamasis REQUEST_Pump_Control nurodo kas kiek laiko tai daryti
 if (millis() > timer_pump + REQUEST_Pump_Control) {
     timer_pump = millis();
-if (Boiler_Good==1){
-if (Collector_Good==1){ 
+if (Boiler_Good==1){ // jei boilerio daviklis geras
+if (Collector_Good==1){ // jei kolektoriaus daviklis geras
 //tikrinama at kolektorius nėra šiltesnis už boilerį	
 if (Collector_tempC - Boiler_tempC >= Differential_ON) {
    Siurblys_ijungtas();
@@ -328,7 +326,9 @@ if (Collector_tempC - Boiler_tempC <= Differential_OFF) {
 //______________________________________________
 //Kolektoriaus jutiklių klaidų tikrinimo pražia
 //----------------------------------------------
-}else{//Jei kolektoriaus temperatūros jutiklis neveikia, įjungiamas siurblys 3 minutėms (laiką nurodo kintamasis REQUEST_Collector_Error) 
+}else{Serial.println("************* Kolektoriaus daviklio zyme- BLOGAS! ********************************");
+  /*
+  //Jei kolektoriaus temperatūros jutiklis neveikia, įjungiamas siurblys 3 minutėms (laiką nurodo kintamasis REQUEST_Collector_Error) 
 
 if (millis() > timer_Collector_Error + REQUEST_Collector_Error) {
    timer_Collector_Error = millis();
@@ -341,8 +341,11 @@ if (millis() > timer_Collector_Error + REQUEST_Collector_Error) {
 }}//______________________________________________
   //Boilerio jutiklių klaidų tikrinimo pražia
   //----------------------------------------------
-}}
-else{ if (Collector_tempC >=95){Siurblys_ijungtas();} //Jei kolektoriaus temperatūra didesnė negu 95 laipsniai, įjungiamas siurblys 
+*/
+}
+}
+else{ Serial.println("************* Boilerio daviklio zyme- BLOGAS! ********************************");
+  // if (Collector_tempC >=95){Siurblys_ijungtas();} //Jei kolektoriaus temperatūra didesnė negu 95 laipsniai, įjungiamas siurblys 
 
 }} //__________________________________________________
    //
@@ -374,12 +377,12 @@ digitalWrite(Pump, HIGH);
 void Rele_2_ijungta()  {
 digitalWrite(Relay2, LOW);
 digitalWrite(13, HIGH);
-   lcd.setCursor(10,1);
+   lcd.setCursor(9,1);
    lcd.write((uint8_t)2);//char up to LCD
 }
 //termostato reles įsjungimas ir atitinkamo ženklo ekrane rodymas
 void Rele_2_isjungta(){
 digitalWrite(Relay2, HIGH);
-   lcd.setCursor(10,1);
+   lcd.setCursor(9,1);
    lcd.write((uint8_t)1); //char down to LCD
 }
