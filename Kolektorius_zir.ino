@@ -97,7 +97,7 @@ static long timer_Boiler_Error=0;
 // REQUEST_Boiler_Error laiko intervalas veiksmui, jei boilerio temperatūros jutiklis rodo klaidą
 #define REQUEST_Pump_Control 10000       // 10000 millis= 10 sekundziu
 #define REQUEST_Relay2_Control 10000       // 15000 millis= 15 sekundziu
-#define REQUEST_Collector_Error 6000// 10minuciu
+#define REQUEST_Collector_Error 600000// 10minuciu
 #define REQUEST_Boiler_Error 10000       // 30000 millis= 30 sekundziu
 #define REQUEST_freezing 5000       // 30000 millis= 30 sekundziu
 
