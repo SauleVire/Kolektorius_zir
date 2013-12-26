@@ -54,7 +54,7 @@ boolean bBlink = true;
 
 
 //#define VERSIJA 10 //reikia ištrinti du pirmus eilutės simbolius, jei plokštelė gaminta Lietuvoje, (vario-geltona spalva)
-#define VERSIJA 11 //reikia ištrinti du pirmus eilutės simbolius, jei ant Jūsų polokštelės yra  www.SauleVire.lt reklama ir užrašas "Order #100010284"
+//#define VERSIJA 11 //reikia ištrinti du pirmus eilutės simbolius, jei ant Jūsų polokštelės yra  www.SauleVire.lt reklama ir užrašas "Order #100010284"
 
 #ifndef VERSIJA 
 #error "Jus turite pasirinkti kintamojo VERSIJA reiksme. Nuimkite komentarų simbolius (//) vienoje is eiluciu #define VERSIJA 10 (arba 11)"
@@ -89,7 +89,6 @@ static long timer_Relay2=0;
 static long timer_freezing=0;
 
 static long timer_Collector_Error=0;
-static long timer_Collector_Error_pump_on=0;
 static long timer_Boiler_Error=0;
 //Laiko intervalai
 // REQUEST_Pump_Control minimalus siurblio reles veikimo laiko intervalas, pasikeitus temperatūrų reikšmėms
@@ -98,8 +97,7 @@ static long timer_Boiler_Error=0;
 // REQUEST_Boiler_Error laiko intervalas veiksmui, jei boilerio temperatūros jutiklis rodo klaidą
 #define REQUEST_Pump_Control 10000       // 10000 millis= 10 sekundziu
 #define REQUEST_Relay2_Control 10000       // 15000 millis= 15 sekundziu
-#define REQUEST_Collector_Error_pump_on 120000
-#define REQUEST_Collector_Error 300000// 120000 millis= 2 minutės
+#define REQUEST_Collector_Error 6000// 10minuciu
 #define REQUEST_Boiler_Error 10000       // 30000 millis= 30 sekundziu
 #define REQUEST_freezing 5000       // 30000 millis= 30 sekundziu
 
@@ -338,22 +336,21 @@ if (Collector_tempC - Boiler_tempC <= Differential_OFF) {
 //Kolektoriaus jutiklių klaidų tikrinimo pražia
 //----------------------------------------------
 }else{Serial.println("************* Kolektoriaus daviklio zyme- BLOGAS! ********************************");
-  
-  //Jei kolektoriaus temperatūros jutiklis neveikia, įjungiamas siurblys 3 minutėms (laiką nurodo kintamasis REQUEST_Collector_Error) 
-
+//Jei kolektoriaus temperatūros jutiklis neveikia, įjungiamas siurblys 3 minutėms (laiką nurodo kintamasis REQUEST_Collector_Error) 
 if (millis() > timer_Collector_Error + REQUEST_Collector_Error) {
    timer_Collector_Error = millis();
-   timer_Collector_Error_pump_on = millis();
-   Saved_Boiler_tempC=Boiler_tempC; //Atsimenama boilerio temperatūra
+   Saved_Boiler_tempC = Boiler_tempC; //Atsimenama boilerio temperatūra
    Siurblys_ijungtas();
+   lcd.setCursor(8,0); lcd.print(" ??.??");
    Serial.println("____________________________________________________________");
-   Serial.println("kolektoriaus temperaturos matavimo klaida, siurblys ijungtas");
+   Serial.println("***** kolektoriaus apsauga nuo perkaitimo, siurblys ijungtas");
    Serial.println("____________________________________________________________");
    Serial.println(Saved_Boiler_tempC);
+}else{ if (Saved_Boiler_tempC - Boiler_tempC >= 0.5 )
+       {Siurblys_isjungtas(); timer_Collector_Error = millis();
+       }
 }
- if ((millis() > timer_Collector_Error_pump_on + REQUEST_Collector_Error_pump_on) && (Saved_Boiler_tempC <= Boiler_tempC )){
-  Siurblys_isjungtas(); //Jei kolektoriaus temperatūros jutiklis neveikia ir boilerio temperatūra krinta, siurblys išjungiamas
-}//______________________________________________
+//______________________________________________
   //Boilerio jutiklių klaidų tikrinimo pražia
   //----------------------------------------------
 
@@ -371,7 +368,7 @@ else{ Serial.println("************* Boilerio daviklio zyme- BLOGAS! ************
 } //__________________________________________________
    //
    //--------------------------------------------------
-delay (3000);
+
 }//Pagrindinės programos pabaiga
 //_______________________________________
 //      P A P R O G R A M Ė S 
