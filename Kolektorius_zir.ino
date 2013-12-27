@@ -6,6 +6,14 @@
 // ********************************************************************************************************
 //                              P  A  K  E  I  T  I  M  A  I
 // ********************************************************************************************************
+// 2013 12 27
+// Išgaudytos klaidos, sugedus davikliams įjungiamas siurblys kolektoriaus apsaugojimui nuo perkaitimo
+// pagal tokį algoritma:
+// Jei kolektoriaus temperatūros jutiklis neveikia, įjungiamas siurblys. 
+// Kas kiek laiko nurodo kintamasis REQUEST_Collector_Error
+// Jei po siurblio įjungimo boilerio temperatūra mažėja, siurblys išjungiamas.
+// Jei blogas boilerio daviklis, o kolektoriaus temperatūra didesnė negu 95 laipsniai, įjungiamas siurblys, 
+// kai kolektoriaus temperatūra nukrenta iki 85 laipsnių, siurblys išjungiamas.
 // 2013 12 21
 // Pataisyta apsauga nuo užšalimo. Tikrinama kas 5 sek. Galima laiką keisti keičiant kintamąjį- REQUEST_freezing 
 // Galima atjungti 3 temperatūros daviklį, jei jis nenaudojamas keičiant kintamojo "Temp3_daviklis" reikšmę.
@@ -95,11 +103,11 @@ static long timer_Boiler_Error=0;
 // REQUEST_Relay2_Control minimalus termostato reles veikimo laiko intervalas, pasikeitus temperatūrų reikšmėms
 // REQUEST_Collector_Error laiko intervalas veiksmui, jei kolektoriaus temperatūros jutiklis rodo klaidą
 // REQUEST_Boiler_Error laiko intervalas veiksmui, jei boilerio temperatūros jutiklis rodo klaidą
-#define REQUEST_Pump_Control 10000       // 10000 millis= 10 sekundziu
+#define REQUEST_Pump_Control 10000          // 10000 millis= 10 sekundziu
 #define REQUEST_Relay2_Control 10000       // 15000 millis= 15 sekundziu
-#define REQUEST_Collector_Error 600000// 10minuciu
+#define REQUEST_Collector_Error 600000    // 10minuciu
 #define REQUEST_Boiler_Error 10000       // 30000 millis= 30 sekundziu
-#define REQUEST_freezing 5000       // 30000 millis= 30 sekundziu
+#define REQUEST_freezing 5000          // 30000 millis= 30 sekundziu
 
 int freezing = 1; //kintamasis apsaugai nuo užšalimo įjungti (freezing = 1) arba išjungti (freezing = 0)
 int Temp3_daviklis = 1 ; //kintamasis trečio daviklio naudojimui 0- nenaudojamas, 1- naudojamas
@@ -336,7 +344,9 @@ if (Collector_tempC - Boiler_tempC <= Differential_OFF) {
 //Kolektoriaus jutiklių klaidų tikrinimo pražia
 //----------------------------------------------
 }else{Serial.println("************* Kolektoriaus daviklio zyme- BLOGAS! ********************************");
-//Jei kolektoriaus temperatūros jutiklis neveikia, įjungiamas siurblys 3 minutėms (laiką nurodo kintamasis REQUEST_Collector_Error) 
+// Jei kolektoriaus temperatūros jutiklis neveikia, įjungiamas siurblys. 
+// Kas kiek laiko nurodo kintamasis REQUEST_Collector_Error
+// Jei boilerio temperatūra mažėja, siurblys išjungiamas.
 if (millis() > timer_Collector_Error + REQUEST_Collector_Error) {
    timer_Collector_Error = millis();
    Saved_Boiler_tempC = Boiler_tempC; //Atsimenama boilerio temperatūra
